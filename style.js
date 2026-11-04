@@ -1,130 +1,217 @@
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+import * as THREE from "https://esm.sh/three@0.160.0";
+import { OrbitControls } from "https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js";
 
-// ===============================
-// VIRTUAL AI OFFICE SIMULATOR
-// ===============================
+// =====================================
+// NEURA OFFICE - 3D ENVIRONMENT
+// =====================================
 
-const canvas = document.getElementById('office');
+const canvas = document.getElementById("office");
 
 if (canvas) {
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x111d30);
+  scene.background = new THREE.Color("#111d30");
 
   const camera = new THREE.PerspectiveCamera(
-    60,
-    canvas.clientWidth / canvas.clientHeight,
+    55,
+    1,
     0.1,
     100
   );
 
-  camera.position.set(8, 7, 10);
+  camera.position.set(9, 8, 11);
 
   const renderer = new THREE.WebGLRenderer({
-    canvas,
+    canvas: canvas,
     antialias: true
   });
 
-  renderer.setSize(canvas.clientWidth, canvas.clientHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+  // Camera controls
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
-  controls.target.set(0, 0, 0);
+  controls.target.set(0, 0.5, 0);
+  controls.maxPolarAngle = Math.PI / 2.05;
+  controls.minDistance = 5;
+  controls.maxDistance = 20;
 
   // Lighting
-  scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+  scene.add(new THREE.AmbientLight(0xffffff, 1.4));
 
-  const light = new THREE.DirectionalLight(0xffffff, 2);
-  light.position.set(5, 10, 5);
-  scene.add(light);
+  const sunlight = new THREE.DirectionalLight(0xffffff, 2);
+  sunlight.position.set(5, 10, 5);
+  sunlight.castShadow = true;
+  scene.add(sunlight);
+
+  // Materials
+  const floorMaterial = new THREE.MeshStandardMaterial({
+    color: "#26364e",
+    roughness: 0.8
+  });
+
+  const deskMaterial = new THREE.MeshStandardMaterial({
+    color: "#9b7653"
+  });
 
   // Floor
   const floor = new THREE.Mesh(
-    new THREE.BoxGeometry(12, 0.2, 10),
-    new THREE.MeshStandardMaterial({ color: 0x26364e })
+    new THREE.BoxGeometry(14, 0.25, 12),
+    floorMaterial
   );
 
-  floor.position.y = -0.1;
+  floor.position.y = -0.15;
+  floor.receiveShadow = true;
   scene.add(floor);
 
-  // Grid
-  const grid = new THREE.GridHelper(12, 12, 0x55a7ff, 0x35445a);
-  grid.position.y = 0.02;
+  // Floor grid
+  const grid = new THREE.GridHelper(
+    14,
+    14,
+    "#55a7ff",
+    "#43536b"
+  );
+
+  grid.position.y = 0;
   scene.add(grid);
 
-  // Office desks
+  // Create desk
   function createDesk(x, z) {
-    const desk = new THREE.Group();
+    const group = new THREE.Group();
 
     const top = new THREE.Mesh(
-      new THREE.BoxGeometry(2, 0.15, 1),
-      new THREE.MeshStandardMaterial({ color: 0x8b6548 })
+      new THREE.BoxGeometry(2, 0.16, 1.1),
+      deskMaterial
     );
 
     top.position.y = 1;
-    desk.add(top);
+    top.castShadow = true;
+    group.add(top);
 
-    const legMaterial = new THREE.MeshStandardMaterial({
-      color: 0x26364e
-    });
-
-    for (const dx of [-0.85, 0.85]) {
-      for (const dz of [-0.35, 0.35]) {
+    for (const dx of [-0.8, 0.8]) {
+      for (const dz of [-0.4, 0.4]) {
         const leg = new THREE.Mesh(
           new THREE.BoxGeometry(0.12, 1, 0.12),
-          legMaterial
+          new THREE.MeshStandardMaterial({
+            color: "#26364e"
+          })
         );
 
         leg.position.set(dx, 0.5, dz);
-        desk.add(leg);
+        group.add(leg);
       }
     }
 
-    desk.position.set(x, 0, z);
-    scene.add(desk);
+    // Computer monitor
+    const monitor = new THREE.Mesh(
+      new THREE.BoxGeometry(0.85, 0.55, 0.07),
+      new THREE.MeshStandardMaterial({
+        color: "#17243a",
+        emissive: "#123c68",
+        emissiveIntensity: 0.5
+      })
+    );
+
+    monitor.position.set(0, 1.45, -0.25);
+    group.add(monitor);
+
+    group.position.set(x, 0, z);
+    scene.add(group);
   }
 
+  // Office desks
   createDesk(-3, -2);
   createDesk(0, -2);
   createDesk(3, -2);
   createDesk(-3, 2);
   createDesk(3, 2);
 
-  // AI Employees
+  // Create AI employee
   const employees = [];
 
   function createEmployee(x, z, color) {
-    const employee = new THREE.Group();
+    const person = new THREE.Group();
 
     const body = new THREE.Mesh(
       new THREE.BoxGeometry(0.65, 0.9, 0.4),
-      new THREE.MeshStandardMaterial({ color })
+      new THREE.MeshStandardMaterial({
+        color: color
+      })
     );
 
     body.position.y = 0.85;
-    employee.add(body);
+    body.castShadow = true;
+    person.add(body);
 
     const head = new THREE.Mesh(
       new THREE.SphereGeometry(0.3, 24, 24),
-      new THREE.MeshStandardMaterial({ color: 0xffc99c })
+      new THREE.MeshStandardMaterial({
+        color: "#ffca9c"
+      })
     );
 
-    head.position.y = 1.55;
-    employee.add(head);
+    head.position.y = 1.5;
+    person.add(head);
 
-    employee.position.set(x, 0, z);
-    scene.add(employee);
+    person.position.set(x, 0, z);
+    scene.add(person);
 
-    employees.push(employee);
+    employees.push(person);
   }
 
-  createEmployee(-3, -1, 0x55a7ff);
-  createEmployee(0, -1, 0x43e0d0);
-  createEmployee(3, -1, 0xb58aff);
-  createEmployee(-3, 3, 0xffb454);
-  createEmployee(3, 3, 0xff6b91);
+  createEmployee(-3, -0.8, "#55a7ff");
+  createEmployee(0, -0.8, "#43e0d0");
+  createEmployee(3, -0.8, "#b58aff");
+  createEmployee(-3, 3, "#ffb454");
+  createEmployee(3, 3, "#ff6b91");
+
+  // Office plants
+  function createPlant(x, z) {
+    const pot = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.3, 0.23, 0.5, 16),
+      new THREE.MeshStandardMaterial({
+        color: "#a66b42"
+      })
+    );
+
+    pot.position.set(x, 0.25, z);
+    scene.add(pot);
+
+    const leaves = new THREE.Mesh(
+      new THREE.SphereGeometry(0.55, 16, 16),
+      new THREE.MeshStandardMaterial({
+        color: "#35a76c"
+      })
+    );
+
+    leaves.position.set(x, 0.9, z);
+    scene.add(leaves);
+  }
+
+  createPlant(-5, -4);
+  createPlant(5, -4);
+  createPlant(-5, 4);
+  createPlant(5, 4);
+
+  // Resize renderer
+  function resizeOffice() {
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+
+    if (!width || !height) return;
+
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(width, height, false);
+  }
+
+  const resizeObserver = new ResizeObserver(resizeOffice);
+  resizeObserver.observe(canvas);
+
+  resizeOffice();
 
   // Animation
   const clock = new THREE.Clock();
@@ -134,9 +221,9 @@ if (canvas) {
 
     const time = clock.getElapsedTime();
 
-    employees.forEach((employee, index) => {
-      employee.position.y =
-        Math.sin(time * 2 + index) * 0.04;
+    employees.forEach((person, index) => {
+      person.position.y =
+        Math.sin(time * 2 + index) * 0.035;
     });
 
     controls.update();
@@ -145,46 +232,35 @@ if (canvas) {
 
   animate();
 
-  // Responsive canvas
-  window.addEventListener('resize', () => {
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-
-    if (!width || !height) return;
-
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(width, height);
-  });
+} else {
+  console.error("Canvas #office tidak ditemukan di index.html");
 }
 
-// ===============================
-// TASK MANAGEMENT
-// ===============================
+// =====================================
+// TASK MANAGER
+// =====================================
 
 let totalTasks = 0;
-let completedTasks = 0;
 
 window.assignTask = function () {
   totalTasks++;
 
-  const task = document.getElementById('task-count');
+  const taskCount = document.getElementById("task-count");
 
-  if (task) {
-    task.textContent = totalTasks;
+  if (taskCount) {
+    taskCount.textContent = totalTasks;
   }
 
-  alert('Tugas berhasil diberikan kepada AI Employee!');
+  alert("AI Employee berhasil menerima tugas!");
 };
 
-// ===============================
-// AI OFFICE CHAT DEMO
-// ===============================
+// =====================================
+// AI OFFICE ASSISTANT DEMO
+// =====================================
 
 window.sendMessage = function () {
-  const input = document.getElementById('chat-input');
-  const output = document.getElementById('chat-output');
+  const input = document.getElementById("chat-input");
+  const output = document.getElementById("chat-output");
 
   if (!input || !output) return;
 
@@ -192,18 +268,20 @@ window.sendMessage = function () {
 
   if (!message) return;
 
-  const userMessage = document.createElement('p');
-  userMessage.textContent = 'You: ' + message;
+  const userMessage = document.createElement("p");
+  userMessage.textContent = "You: " + message;
 
   output.appendChild(userMessage);
 
-  const reply = document.createElement('p');
+  const response = document.createElement("p");
 
-  reply.textContent =
-    'AI Assistant: Halo! Saya siap membantu aktivitas kantor virtual kamu.';
+  response.textContent =
+    "Neura AI: Halo! Ada yang bisa saya bantu di kantor virtual hari ini?";
 
-  output.appendChild(reply);
+  output.appendChild(response);
 
-  input.value = '';
+  input.value = "";
   output.scrollTop = output.scrollHeight;
 };
+
+console.log("NeuraOffice berhasil dimuat!");
