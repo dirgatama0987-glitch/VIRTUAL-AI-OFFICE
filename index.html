@@ -1,0 +1,376 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuraOffice | AI Office Simulator</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#080d18;color:#eaf2ff;font-family:Arial,sans-serif}
+header{height:65px;padding:0 22px;display:flex;align-items:center;justify-content:space-between;background:#101a2b;border-bottom:1px solid #293950}
+.logo{font-size:21px;font-weight:bold;color:#65baff}
+.online{color:#60e3a1;font-size:12px}
+.layout{display:grid;grid-template-columns:210px 1fr 290px;height:calc(100vh - 65px)}
+.sidebar,.right{background:#101a2b;padding:18px;overflow:auto}
+.sidebar{border-right:1px solid #293950}
+.right{border-left:1px solid #293950}
+.nav{padding:13px;margin:5px 0;border-radius:8px;color:#a9bad2;cursor:pointer}
+.nav.active,.nav:hover{background:#203651;color:white}
+.main{position:relative;min-width:0;background:#0b1422}
+#office{width:100%;height:100%;display:block}
+.scene-title{position:absolute;top:20px;left:22px;pointer-events:none}
+.scene-title h2{margin:5px 0}
+.scene-title small{color:#59d9cf;letter-spacing:2px}
+.stat{padding:13px;margin:9px 0;background:#18263a;border:1px solid #2a3c54;border-radius:9px}
+.stat small{color:#9aacc5}
+.stat h2{margin:7px 0;color:#66baff}
+.employee{padding:12px 0;border-bottom:1px solid #293950;font-size:13px}
+.employee span{color:#63dfa0;float:right;font-size:11px}
+button{border:0;background:#398fff;color:white;padding:11px;border-radius:8px;cursor:pointer;font-weight:bold}
+button:hover{background:#286ed0}
+.task{background:#18263a;padding:12px;border-radius:8px;margin:9px 0;font-size:12px}
+.bar{height:5px;background:#34435a;margin-top:9px;border-radius:5px;overflow:hidden}
+.bar div{height:100%;background:#55b5ff}
+.chat{background:#18263a;border-radius:9px;padding:10px;margin-top:10px}
+#chatlog{height:110px;overflow:auto;font-size:12px;color:#c7d8ef}
+input{width:100%;background:#0b1422;color:white;border:1px solid #34435a;padding:10px;border-radius:7px;margin:8px 0}
+.full{width:100%;margin:7px 0}
+.hint{position:absolute;bottom:15px;left:18px;color:#9aacc5;font-size:11px;pointer-events:none}
+@media(max-width:900px){
+.layout{grid-template-columns:1fr;height:auto}
+.sidebar{display:none}
+.main{height:65vh;min-height:400px}
+.right{border:0}
+}
+</style>
+</head>
+<body>
+
+<header>
+ <div class="logo">◈ NeuraOffice</div>
+ <div class="online">● SYSTEM ONLINE</div>
+</header>
+
+<div class="layout">
+
+<aside class="sidebar">
+ <h3>WORKSPACE</h3>
+ <div class="nav active">▦ Office Overview</div>
+ <div class="nav">♙ AI Employees</div>
+ <div class="nav">✓ Task Manager</div>
+ <div class="nav">▤ Reports</div>
+ <div class="nav">⚙ Settings</div>
+ <hr style="border-color:#293950">
+ <h3>YOUR OFFICE</h3>
+ <p>Neura HQ</p>
+ <small style="color:#9aacc5">Level 01 · Startup Studio</small>
+</aside>
+
+<main class="main">
+ <div class="scene-title">
+  <small>LIVE ENVIRONMENT</small>
+  <h2>Office Floor</h2>
+  <p style="color:#9aacc5;font-size:12px">Your AI team is working.</p>
+ </div>
+ <canvas id="office"></canvas>
+ <div class="hint">Drag mouse to rotate · Scroll to zoom</div>
+</main>
+
+<aside class="right">
+ <h3>Office Analytics</h3>
+ <div class="stat">
+  <small>PRODUCTIVITY</small>
+  <h2 id="productivity">87%</h2>
+ </div>
+ <div class="stat">
+  <small>TASKS COMPLETED</small>
+  <h2 id="done">12 / 16</h2>
+ </div>
+ <div class="stat">
+  <small>OFFICE CREDITS</small>
+  <h2 id="credits">2,450</h2>
+ </div>
+
+ <h3>AI Employees</h3>
+ <div class="employee">🧑‍💻 Alex Morgan <span>● Coding</span></div>
+ <div class="employee">👩‍🎨 Mia Chen <span>● Online</span></div>
+ <div class="employee">🧑‍🔬 Ravi Patel <span>● Working</span></div>
+ <div class="employee">👩‍💼 Sofia Reyes <span>● Online</span></div>
+
+ <button class="full" onclick="assignTask()">＋ Assign New Task</button>
+
+ <h3>Active Tasks</h3>
+ <div id="tasks">
+  <div class="task">Landing Page Redesign<div class="bar"><div style="width:72%"></div></div></div>
+  <div class="task">API Integration<div class="bar"><div style="width:45%"></div></div></div>
+  <div class="task">Weekly Data Report<div class="bar"><div style="width:90%"></div></div></div>
+ </div>
+
+ <h3>AI Office Assistant</h3>
+ <div class="chat">
+  <div id="chatlog">Neura AI: Halo! Ada yang bisa saya bantu?</div>
+  <input id="message" placeholder="Ketik pesan..." onkeydown="if(event.key==='Enter')sendMessage()">
+  <button class="full" onclick="sendMessage()">Kirim Pesan</button>
+ </div>
+</aside>
+
+</div>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+const canvas=document.getElementById('office');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x0b1422);
+
+const camera=new THREE.PerspectiveCamera(45,1,0.1,100);
+camera.position.set(12,11,15);
+
+const controls=new OrbitControls(camera,canvas);
+controls.enableDamping=true;
+controls.target.set(0,0.7,0);
+
+scene.add(new THREE.HemisphereLight(0xb8dcff,0x182338,2));
+
+const light=new THREE.DirectionalLight(0xffffff,3);
+light.position.set(5,12,8);
+light.castShadow=true;
+scene.add(light);
+
+const blueLight=new THREE.PointLight(0x258dff,30,15);
+blueLight.position.set(-5,4,0);
+scene.add(blueLight);
+
+function makeBox(w,h,d,color,x,y,z){
+ const mesh=new THREE.Mesh(
+  new THREE.BoxGeometry(w,h,d),
+  new THREE.MeshStandardMaterial({color,roughness:0.65})
+ );
+ mesh.position.set(x,y,z);
+ mesh.castShadow=true;
+ mesh.receiveShadow=true;
+ scene.add(mesh);
+ return mesh;
+}
+
+// Floor
+makeBox(18,.3,14,0x1b2b40,0,-.15,0);
+
+// Grid
+const grid=new THREE.GridHelper(18,36,0x3976a8,0x263b53);
+grid.position.y=.01;
+scene.add(grid);
+
+// Walls
+makeBox(18,4,.3,0x14243a,0,2,-7);
+makeBox(.3,4,14,0x14243a,-9,2,0);
+makeBox(.3,4,14,0x14243a,9,2,0);
+
+// Office decoration
+const glow=new THREE.MeshStandardMaterial({
+ color:0x168cff,
+ emissive:0x0869cc,
+ emissiveIntensity:1.5
+});
+makeBox(17,.07,.08,0x168cff,0,3.8,-6.8);
+
+// Desks
+function desk(x,z){
+ makeBox(2.2,.15,1.2,0x344c68,x,1,z);
+ for(let dx of [-.9,.9]){
+  for(let dz of [-.45,.45]){
+   makeBox(.08,1,.08,0x172438,x+dx,.5,z+dz);
+  }
+ }
+ makeBox(.95,.65,.1,0x080f1b,x,1.48,z-.25);
+ makeBox(.83,.49,.02,0x087ac0,x,1.48,z-.18);
+ makeBox(.7,.05,.25,0x111b2b,x,1.15,z+.3);
+}
+desk(-5,-3);
+desk(0,-3);
+desk(5,-3);
+desk(-2,2);
+desk(3,2);
+
+// Plants
+function plant(x,z){
+ const pot=new THREE.Mesh(
+  new THREE.CylinderGeometry(.2,.3,.5,16),
+  new THREE.MeshStandardMaterial({color:0x34445b})
+ );
+ pot.position.set(x,.25,z);
+ scene.add(pot);
+
+ for(let i=0;i<5;i++){
+  const leaf=new THREE.Mesh(
+   new THREE.SphereGeometry(.15,10,10),
+   new THREE.MeshStandardMaterial({color:0x269b75})
+  );
+  leaf.position.set(x+Math.sin(i)*.2,.7,z+Math.cos(i)*.2);
+  leaf.scale.y=2;
+  scene.add(leaf);
+ }
+}
+plant(-7,-5);
+plant(7,-5);
+plant(-7,5);
+plant(7,5);
+
+// AI Workers
+const workers=[];
+const colors=[0x428cff,0xa47bff,0x35b99d,0xe18a69];
+
+function createWorker(x,z,index){
+ const group=new THREE.Group();
+ scene.add(group);
+ group.position.set(x,0,z);
+
+ const shirt=new THREE.MeshStandardMaterial({color:colors[index]});
+ const skin=new THREE.MeshStandardMaterial({color:0xd8a27d});
+ const dark=new THREE.MeshStandardMaterial({color:0x182438});
+
+ const body=new THREE.Mesh(
+  new THREE.CapsuleGeometry(.27,.5,4,8),shirt
+ );
+ body.position.y=1;
+ group.add(body);
+
+ const head=new THREE.Mesh(
+  new THREE.SphereGeometry(.23,16,12),skin
+ );
+ head.position.y=1.52;
+ group.add(head);
+
+ const hair=new THREE.Mesh(
+  new THREE.SphereGeometry(.24,12,8),
+  dark
+ );
+ hair.position.y=1.67;
+ group.add(hair);
+
+ for(let side of [-1,1]){
+  const leg=new THREE.Mesh(
+   new THREE.CapsuleGeometry(.09,.35,3,6),dark
+  );
+  leg.position.set(side*.13,.38,0);
+  group.add(leg);
+
+  const arm=new THREE.Mesh(
+   new THREE.CapsuleGeometry(.08,.35,3,6),shirt
+  );
+  arm.position.set(side*.34,1,.05);
+  arm.rotation.z=side*.35;
+  group.add(arm);
+ }
+
+ workers.push({group,x,z,phase:Math.random()*6});
+}
+
+createWorker(-5,-1,0);
+createWorker(0,-1,1);
+createWorker(5,-1,2);
+createWorker(2,3,3);
+
+let time=0;
+const clock=new THREE.Clock();
+
+function resize(){
+ const width=canvas.clientWidth;
+ const height=canvas.clientHeight;
+ renderer.setSize(width,height,false);
+ camera.aspect=width/height;
+ camera.updateProjectionMatrix();
+}
+window.addEventListener('resize',resize);
+resize();
+
+function animate(){
+ requestAnimationFrame(animate);
+ time+=clock.getDelta();
+
+ workers.forEach(w=>{
+  w.group.position.x=w.x+Math.sin(time*.7+w.phase)*.12;
+  w.group.position.z=w.z+Math.cos(time*.5+w.phase)*.12;
+  w.group.position.y=Math.abs(Math.sin(time*2+w.phase))*.03;
+ });
+
+ controls.update();
+ renderer.render(scene,camera);
+}
+animate();
+</script>
+
+<script>
+let completed=12;
+let credits=2450;
+
+function assignTask(){
+ const names=['Alex Morgan','Mia Chen','Ravi Patel','Sofia Reyes'];
+ const tasks=[
+  'Prepare Project Roadmap',
+  'Design New Interface',
+  'Analyze Customer Data',
+  'Improve Office Workflow',
+  'Develop New Features'
+ ];
+
+ const name=names[Math.floor(Math.random()*names.length)];
+ const task=tasks[Math.floor(Math.random()*tasks.length)];
+
+ const element=document.createElement('div');
+ element.className='task';
+ element.innerHTML=task+'<br><small>'+name+' · Assigned</small><div class="bar"><div style="width:0%"></div></div>';
+
+ document.getElementById('tasks').prepend(element);
+
+ let progress=0;
+ const interval=setInterval(()=>{
+  progress+=Math.floor(Math.random()*12)+5;
+  if(progress>=100){
+   progress=100;
+   clearInterval(interval);
+   completed++;
+   credits+=30;
+   document.getElementById('done').textContent=completed+' / 16';
+   document.getElementById('credits').textContent=credits.toLocaleString('en-US');
+  }
+  element.querySelector('.bar div').style.width=progress+'%';
+ },1200);
+}
+
+function sendMessage(){
+ const input=document.getElementById('message');
+ const message=input.value.trim();
+ if(!message)return;
+
+ const log=document.getElementById('chatlog');
+ const user=document.createElement('p');
+ user.textContent='You: '+message;
+ log.appendChild(user);
+ input.value='';
+
+ setTimeout(()=>{
+  const answers=[
+   'Tim kamu sedang bekerja dengan baik. Mari prioritaskan tugas yang aktif.',
+   'Saya sarankan membuat task baru untuk meningkatkan produktivitas.',
+   'Semua sistem kantor berjalan normal!',
+   'Produktivitas kantor saat ini cukup bagus.',
+   'Saya siap membantu mengelola aktivitas kantor.'
+  ];
+  const response=document.createElement('p');
+  response.textContent='Neura AI: '+answers[Math.floor(Math.random()*answers.length)];
+  log.appendChild(response);
+  log.scrollTop=log.scrollHeight;
+ },500);
+}
+</script>
+
+</body>
+</html>
