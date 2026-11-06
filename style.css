@@ -24,7 +24,6 @@ body {
   overflow: hidden;
 }
 
-/* ========== TOP BAR ========== */
 .topbar {
   height: 52px;
   background: #fff;
@@ -39,9 +38,9 @@ body {
 .brand {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 16px;
   white-space: nowrap;
 }
 .brand-icon { color: var(--accent); font-size: 18px; }
@@ -97,14 +96,12 @@ body {
 }
 .clock { color: var(--text-dim); font-variant-numeric: tabular-nums; }
 
-/* ========== LAYOUT ========== */
 .main-layout {
   display: grid;
   grid-template-columns: 240px 1fr 260px;
   height: calc(100vh - 52px);
 }
 
-/* ========== SIDEBARS ========== */
 .sidebar {
   background: #fff;
   border-right: 1px solid var(--panel-border);
@@ -140,8 +137,7 @@ body {
 }
 .btn-icon:hover { background: var(--accent-soft); color: var(--accent); }
 
-/* Agents */
-.agent-list { display: flex; flex-direction: column; gap: 4px; max-height: 320px; overflow-y: auto; }
+.agent-list { display: flex; flex-direction: column; gap: 4px; max-height: 340px; overflow-y: auto; }
 .agent-item {
   display: flex;
   align-items: center;
@@ -158,9 +154,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #fff;
+  flex-shrink: 0;
 }
 .agent-info { flex: 1; min-width: 0; }
 .agent-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -176,7 +173,6 @@ body {
 .status-posting { color: var(--purple); }
 .status-meeting { color: var(--green); }
 
-/* Rooms */
 .room-list { display: flex; flex-direction: column; gap: 2px; }
 .room-item {
   padding: 7px 10px;
@@ -188,14 +184,12 @@ body {
 .room-item:hover { background: #f8f6f1; color: var(--text); }
 .room-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 
-/* ========== CONTENT ========== */
 .content {
   overflow: auto;
   background: var(--bg);
   position: relative;
 }
 
-/* ========== MONITOR ========== */
 .monitor-header {
   padding: 12px 16px;
   border-bottom: 1px solid var(--panel-border);
@@ -206,11 +200,7 @@ body {
   font-weight: 700;
   color: var(--text-dim);
 }
-.live-badge {
-  color: var(--red);
-  font-size: 10px;
-  letter-spacing: 0.5px;
-}
+.live-badge { color: var(--red); font-size: 10px; letter-spacing: 0.5px; }
 .monitor-body {
   padding: 14px;
   font-size: 13px;
@@ -227,7 +217,6 @@ body {
 .metric-label { color: var(--text-dim); }
 .metric-value { font-weight: 600; }
 
-/* ========== COMMON CARDS ========== */
 .view-header {
   padding: 20px 24px 12px;
   display: flex;
@@ -257,7 +246,7 @@ body {
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 14px;
   padding: 0 24px 24px;
 }
@@ -272,7 +261,6 @@ body {
 .card-value { font-size: 24px; font-weight: 700; }
 .card-sub { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
 
-/* Dashboard specific */
 .activity-list { padding: 0 24px 24px; }
 .activity-item {
   background: #fff;
@@ -287,32 +275,6 @@ body {
 }
 .activity-time { color: var(--text-dim); font-size: 11px; min-width: 50px; }
 
-/* Office 3D */
-.office-container {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-#officeCanvas {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-.office-hint {
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(255,255,255,0.9);
-  border: 1px solid var(--panel-border);
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 12px;
-  color: var(--text-dim);
-  pointer-events: none;
-}
-
-/* Employees table */
 .table-wrap { padding: 0 24px 24px; }
 table {
   width: 100%;
@@ -332,14 +294,13 @@ th { background: #faf8f4; font-weight: 600; color: var(--text-dim); font-size: 1
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: #faf8f4; }
 
-/* Chat */
 .chat-layout {
   display: grid;
   grid-template-columns: 220px 1fr;
-  height: calc(100vh - 52px - 0px);
+  height: 100%;
 }
 .chat-agents { border-right: 1px solid var(--panel-border); background: #fff; overflow-y: auto; }
-.chat-main { display: flex; flex-direction: column; background: #fff; }
+.chat-main { display: flex; flex-direction: column; background: #fff; height: 100%; }
 .chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -382,7 +343,6 @@ tr:hover td { background: #faf8f4; }
 }
 .chat-input-bar input:focus { border-color: var(--accent); }
 
-/* Task list */
 .task-item {
   background: #fff;
   border: 1px solid var(--panel-border);
@@ -404,7 +364,6 @@ tr:hover td { background: #faf8f4; }
 .priority-medium { background: #fef3c7; color: #d97706; }
 .priority-low { background: #d1fae5; color: #059669; }
 
-/* Placeholder views */
 .placeholder {
   display: flex;
   flex-direction: column;
@@ -413,16 +372,29 @@ tr:hover td { background: #faf8f4; }
   height: 100%;
   color: var(--text-dim);
   gap: 12px;
+  text-align: center;
+  padding: 40px;
 }
-.placeholder h2 { font-size: 18px; color: var(--text); }
+.placeholder h2 { font-size: 20px; color: var(--text); }
+.placeholder p { max-width: 400px; line-height: 1.5; }
 
-/* Animations */
+.office-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: linear-gradient(135deg, #f8f6f1, #eef2ff);
+  color: var(--text-dim);
+  gap: 16px;
+}
+.office-placeholder h2 { color: var(--text); font-size: 22px; }
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-thumb { background: #d4cfc4; border-radius: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
