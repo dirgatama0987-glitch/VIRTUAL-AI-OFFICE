@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Office Chronos</title>
+  <title>DRX.AI</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -13,11 +13,11 @@
     <header class="topbar">
       <div class="brand">
         <span class="brand-icon">◈</span>
-        <span class="brand-text">OFFICE</span>
-        <span class="brand-accent">CHRONOS</span>
+        <span class="brand-text">DRX</span>
+        <span class="brand-accent">.AI</span>
       </div>
 
-      <nav class="top-nav">
+      <nav class="top-nav" id="topNav">
         <button class="nav-item active" data-view="dashboard">Dashboard</button>
         <button class="nav-item" data-view="office">Virtual Office</button>
         <button class="nav-item" data-view="employees">AI Employees</button>
@@ -37,7 +37,7 @@
           <span class="status-dot"></span>
           SYSTEM ONLINE
         </div>
-        <div class="clock" id="clock">13:36:45</div>
+        <div class="clock" id="clock">00:00:00</div>
       </div>
     </header>
 
@@ -49,9 +49,7 @@
             <span>◈ AGENTS</span>
             <button class="btn-icon" id="btnAddAgent" title="Recruit AI">+</button>
           </div>
-          <div class="agent-list" id="agentList">
-            <!-- diisi JS -->
-          </div>
+          <div class="agent-list" id="agentList"></div>
         </div>
 
         <div class="sidebar-section">
@@ -70,10 +68,8 @@
         </div>
       </aside>
 
-      <!-- CENTER CONTENT -->
-      <main class="content" id="content">
-        <!-- Views akan diganti oleh JS -->
-      </main>
+      <!-- CENTER -->
+      <main class="content" id="content"></main>
 
       <!-- RIGHT SIDEBAR -->
       <aside class="sidebar right-sidebar">
@@ -81,13 +77,11 @@
           <span>MONITOR</span>
           <span class="live-badge">● LIVE</span>
         </div>
-        <div class="monitor-body" id="monitorBody">
-          <!-- diisi JS sesuai view -->
-        </div>
+        <div class="monitor-body" id="monitorBody"></div>
       </aside>
     </div>
   </div>
 
-  <script type="module" src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
