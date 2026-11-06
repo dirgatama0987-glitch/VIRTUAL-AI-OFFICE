@@ -1,315 +1,93 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>NeuraOffice | Virtual AI Office Simulator</title>
-
-  <meta name="description" content="Explore NeuraOffice, a modern 3D Virtual AI Office Simulator.">
-
-  <meta name="theme-color" content="#080d18">
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="./style.css">
-
-  <!-- Three.js and application JavaScript -->
-  <script type="module" src="./script.js"></script>
-
-  <style>
-    .task {
-      background: #17243a;
-      border-radius: 9px;
-      padding: 12px;
-      margin-top: 10px;
-      font-size: 13px;
-    }
-
-    .bar {
-      height: 7px;
-      background: #26364e;
-      border-radius: 10px;
-      margin-top: 10px;
-      overflow: hidden;
-    }
-
-    .bar div {
-      height: 100%;
-      background: #43e0d0;
-      transition: width .5s;
-    }
-
-    .office {
-      min-height: 350px;
-    }
-
-    #office {
-      display: block;
-      width: 100%;
-      height: 100%;
-      min-height: 350px;
-    }
-
-    .chat-area {
-      margin-top: 20px;
-    }
-
-    #chatlog {
-      min-height: 100px;
-      max-height: 180px;
-      overflow-y: auto;
-      font-size: 13px;
-      line-height: 1.6;
-      margin-bottom: 10px;
-    }
-
-    .employee-status {
-      color: #43e0d0;
-      font-size: 12px;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Office Chronos</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-
 <body>
+  <div class="app">
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-icon">◈</span>
+        <span class="brand-text">OFFICE</span>
+        <span class="brand-accent">CHRONOS</span>
+      </div>
 
-<div class="app">
+      <nav class="top-nav">
+        <button class="nav-item active" data-view="dashboard">Dashboard</button>
+        <button class="nav-item" data-view="office">Virtual Office</button>
+        <button class="nav-item" data-view="employees">AI Employees</button>
+        <button class="nav-item" data-view="tasks">Task Manager</button>
+        <button class="nav-item" data-view="chat">Communication</button>
+        <button class="nav-item" data-view="meeting">Meeting Room</button>
+        <button class="nav-item" data-view="projects">Projects</button>
+        <button class="nav-item" data-view="finance">Finance</button>
+        <button class="nav-item" data-view="analytics">Analytics</button>
+        <button class="nav-item" data-view="documents">Documents</button>
+        <button class="nav-item" data-view="ceo">CEO Center</button>
+        <button class="nav-item" data-view="settings">Settings</button>
+      </nav>
 
-  <!-- HEADER -->
-  <header>
-    <div class="logo">◇ NeuraOffice</div>
+      <div class="top-right">
+        <div class="system-status">
+          <span class="status-dot"></span>
+          SYSTEM ONLINE
+        </div>
+        <div class="clock" id="clock">13:36:45</div>
+      </div>
+    </header>
 
-    <div class="header-info">
-      <span class="status">● SYSTEM ONLINE</span>
+    <div class="main-layout">
+      <!-- LEFT SIDEBAR -->
+      <aside class="sidebar left-sidebar">
+        <div class="sidebar-section">
+          <div class="section-title">
+            <span>◈ AGENTS</span>
+            <button class="btn-icon" id="btnAddAgent" title="Recruit AI">+</button>
+          </div>
+          <div class="agent-list" id="agentList">
+            <!-- diisi JS -->
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="section-title">⌂ ROOMS</div>
+          <div class="room-list" id="roomList">
+            <div class="room-item active" data-room="all">All Rooms</div>
+            <div class="room-item" data-room="ceo">CEO Office</div>
+            <div class="room-item" data-room="marketing">Marketing</div>
+            <div class="room-item" data-room="finance">Finance</div>
+            <div class="room-item" data-room="dev">Development</div>
+            <div class="room-item" data-room="content">Content Creation</div>
+            <div class="room-item" data-room="meeting">Meeting Room</div>
+            <div class="room-item" data-room="break">Break Room</div>
+            <div class="room-item" data-room="reception">Reception</div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CENTER CONTENT -->
+      <main class="content" id="content">
+        <!-- Views akan diganti oleh JS -->
+      </main>
+
+      <!-- RIGHT SIDEBAR -->
+      <aside class="sidebar right-sidebar">
+        <div class="monitor-header">
+          <span>MONITOR</span>
+          <span class="live-badge">● LIVE</span>
+        </div>
+        <div class="monitor-body" id="monitorBody">
+          <!-- diisi JS sesuai view -->
+        </div>
+      </aside>
     </div>
-  </header>
-
-  <div class="main">
-
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-
-      <h3>Workspace</h3>
-
-      <button class="nav-item active">
-        ▦ Office Overview
-      </button>
-
-      <button class="nav-item"
-        onclick="document.getElementById('employees').scrollIntoView({behavior:'smooth'})">
-        ♙ AI Employees
-      </button>
-
-      <button class="nav-item"
-        onclick="document.getElementById('task-manager').scrollIntoView({behavior:'smooth'})">
-        ✓ Task Manager
-      </button>
-
-      <button class="nav-item"
-        onclick="document.getElementById('reports').scrollIntoView({behavior:'smooth'})">
-        ▤ Reports
-      </button>
-
-      <button class="nav-item"
-        onclick="document.getElementById('settings').scrollIntoView({behavior:'smooth'})">
-        ⚙ Settings
-      </button>
-
-      <hr style="border:0;border-top:1px solid #35445a;margin:20px 0;">
-
-      <h3>Your Office</h3>
-
-      <p>Neura HQ</p>
-
-      <p style="color:#8c9ab2;font-size:13px;margin-top:12px;">
-        Level 01 - Startup Studio
-      </p>
-
-    </aside>
-
-    <!-- MAIN WORKSPACE -->
-    <main class="workspace">
-
-      <p style="color:#43e0d0;letter-spacing:3px;font-size:12px;">
-        LIVE ENVIRONMENT
-      </p>
-
-      <h1 class="page-title" style="margin-top:8px;">
-        Office Floor
-      </h1>
-
-      <p class="subtitle">
-        Your AI team is working.
-      </p>
-
-      <!-- 3D OFFICE -->
-      <section class="office">
-
-        <div class="office-label">
-          🏢 Neura HQ - 3D Environment
-        </div>
-
-        <canvas id="office"></canvas>
-
-      </section>
-
-      <!-- STATISTICS -->
-      <section class="stats">
-
-        <div class="stat-card">
-          <p>PRODUCTIVITY</p>
-          <h2>87%</h2>
-        </div>
-
-        <div class="stat-card">
-          <p>TASKS COMPLETED</p>
-          <h2 id="done">12 / 16</h2>
-        </div>
-
-        <div class="stat-card">
-          <p>OFFICE CREDITS</p>
-          <h2 id="credits">2,450</h2>
-        </div>
-
-      </section>
-
-      <!-- TASK MANAGER -->
-      <section id="task-manager" style="margin-top:25px;">
-
-        <h2 class="panel-title">Task Manager</h2>
-
-        <div class="panel-card">
-
-          <p>Assign a new task to your AI employee.</p>
-
-          <button class="primary-btn" onclick="assignTask()">
-            + Assign New Task
-          </button>
-
-          <div id="tasks" style="margin-top:15px;">
-            <p style="color:#8c9ab2;font-size:12px;">
-              No new tasks yet.
-            </p>
-          </div>
-
-        </div>
-
-      </section>
-
-      <!-- REPORTS -->
-      <section id="reports" style="margin-top:25px;">
-
-        <h2 class="panel-title">Office Reports</h2>
-
-        <div class="panel-card">
-          <h3>Daily Performance</h3>
-          <p>Office productivity is currently at 87%.</p>
-        </div>
-
-      </section>
-
-      <!-- SETTINGS -->
-      <section id="settings" style="margin-top:25px;">
-
-        <h2 class="panel-title">Settings</h2>
-
-        <div class="panel-card">
-          <p>NeuraOffice Simulator Version 1.0</p>
-          <p>3D Environment: Enabled</p>
-          <p>AI Assistant: Demo Mode</p>
-        </div>
-
-      </section>
-
-    </main>
-
-    <!-- RIGHT PANEL -->
-    <aside class="right-panel">
-
-      <h2 class="panel-title">Office Analytics</h2>
-
-      <div class="panel-card">
-        <p>PRODUCTIVITY</p>
-        <h2 style="color:#55a7ff;margin-top:8px;">87%</h2>
-      </div>
-
-      <div class="panel-card">
-        <p>TASKS COMPLETED</p>
-        <h2 id="right-done" style="color:#55a7ff;margin-top:8px;">
-          12 / 16
-        </h2>
-      </div>
-
-      <div class="panel-card">
-        <p>OFFICE CREDITS</p>
-        <h2 id="right-credits" style="color:#55a7ff;margin-top:8px;">
-          2,450
-        </h2>
-      </div>
-
-      <!-- EMPLOYEES -->
-      <section id="employees">
-
-        <h2 class="panel-title" style="margin-top:20px;">
-          AI Employees
-        </h2>
-
-        <div class="panel-card">
-          👨🏻‍💻 Alex Morgan
-          <span class="employee-status">● Coding</span>
-        </div>
-
-        <div class="panel-card">
-          👩🏻 Mia Chen
-          <span class="employee-status">● Online</span>
-        </div>
-
-        <div class="panel-card">
-          👨🏻‍💼 Ravi Patel
-          <span class="employee-status">● Working</span>
-        </div>
-
-        <div class="panel-card">
-          👩🏻 Sofia Reyes
-          <span class="employee-status">● Online</span>
-        </div>
-
-      </section>
-
-      <!-- AI CHAT -->
-      <section class="chat-area">
-
-        <h2 class="panel-title">Neura AI Assistant</h2>
-
-        <div class="panel-card">
-
-          <div id="chatlog">
-            <p>Neura AI: Hello! Welcome to NeuraOffice.</p>
-          </div>
-
-          <input
-            type="text"
-            id="message"
-            placeholder="Ask something..."
-          >
-
-          <button
-            class="primary-btn"
-            style="width:100%;"
-            onclick="sendMessage()"
-          >
-            Send Message
-          </button>
-
-        </div>
-
-      </section>
-
-    </aside>
-
   </div>
 
-</div>
-
+  <script type="module" src="script.js"></script>
 </body>
 </html>
