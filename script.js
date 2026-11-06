@@ -1,431 +1,241 @@
 // ======================
-// DRX.AI - Core Script
+// MEETING ROOM
 // ======================
+let currentMeeting = null;
 
-const agents = [
-  { id: 1, name: "Aria", role: "CEO Assistant", dept: "CEO Office", status: "working", color: "#3b82f6", avatar: "A" },
-  { id: 2, name: "Kai", role: "Content Creator", dept: "Content Creation", status: "posting", color: "#8b5cf6", avatar: "K" },
-  { id: 3, name: "Ross", role: "Marketing Lead", dept: "Marketing", status: "break", color: "#f59e0b", avatar: "R" },
-  { id: 4, name: "Nova", role: "Fullstack Dev", dept: "Development", status: "working", color: "#10b981", avatar: "N" },
-  { id: 5, name: "Luna", role: "Finance Analyst", dept: "Finance", status: "standby", color: "#ef4444", avatar: "L" },
-  { id: 6, name: "C.C", role: "Customer Support", dept: "Customer Service", status: "standby", color: "#6366f1", avatar: "C" },
-];
-
-let tasks = [
-  { id: 1, title: "Analisis data penjualan Q3", assignee: "Luna", priority: "high", status: "in-progress", progress: 65 },
-  { id: 2, title: "Buat konten Instagram minggu ini", assignee: "Kai", priority: "medium", status: "in-progress", progress: 40 },
-  { id: 3, title: "Review proposal vendor baru", assignee: "Aria", priority: "high", status: "todo", progress: 0 },
-  { id: 4, title: "Optimasi landing page", assignee: "Nova", priority: "medium", status: "in-progress", progress: 80 },
-];
-
-let currentView = "dashboard";
-let selectedAgent = null;
-
-// ======================
-// CLOCK
-// ======================
-function updateClock() {
-  const el = document.getElementById("clock");
-  if (el) el.textContent = new Date().toLocaleTimeString("en-GB");
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-// ======================
-// RENDER AGENTS
-// ======================
-function renderAgentList() {
-  const el = document.getElementById("agentList");
-  if (!el) return;
-
-  el.innerHTML = agents.map(a => `
-    <div class="agent-item ${selectedAgent === a.id ? 'active' : ''}" data-id="${a.id}">
-      <div class="agent-avatar" style="background:${a.color}">${a.avatar}</div>
-      <div class="agent-info">
-        <div class="agent-name">${a.name}</div>
-        <div class="agent-status status-${a.status}">${a.status}</div>
-      </div>
-    </div>
-  `).join("");
-
-  el.querySelectorAll(".agent-item").forEach(item => {
-    item.onclick = () => {
-      selectedAgent = Number(item.dataset.id);
-      renderAgentList();
-      updateMonitor();
-      if (currentView === "chat") renderView();
-    };
-  });
-}
-
-// ======================
-// NAVIGATION
-// ======================
-function initNavigation() {
-  document.querySelectorAll(".nav-item").forEach(btn => {
-    btn.onclick = () => {
-      document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      currentView = btn.dataset.view;
-      renderView();
-    };
-  });
-
-  document.getElementById("btnAddAgent").onclick = () => {
-    const name = prompt("Nama AI Employee baru:");
-    if (!name || !name.trim()) return;
-    agents.push({
-      id: Date.now(),
-      name: name.trim(),
-      role: "New Recruit",
-      dept: "CEO Office",
-      status: "standby",
-      color: "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, "0"),
-      avatar: name.trim()[0].toUpperCase()
-    });
-    renderAgentList();
-    updateMonitor();
-    if (currentView === "employees") renderView();
-  };
-}
-
-// ======================
-// VIEWS
-// ======================
-function renderView() {
-  const content = document.getElementById("content");
-  if (!content) return;
-
-  switch (currentView) {
-    case "dashboard": renderDashboard(content); break;
-    case "office": renderOffice(content); break;
-    case "employees": renderEmployees(content); break;
-    case "tasks": renderTasks(content); break;
-    case "chat": renderChat(content); break;
-    case "meeting": renderPlaceholder(content, "AI Meeting Room", "Buat rapat virtual, undang beberapa AI, berikan topik, dan dapatkan kesimpulan + dokumen otomatis."); break;
-    case "projects": renderPlaceholder(content, "Project Management", "Buat proyek, tentukan target & deadline, tugaskan multi AI, pantau progres."); break;
-    case "finance": renderPlaceholder(content, "Finance & Accounting", "Simulasi pemasukan, pengeluaran, anggaran divisi, dan laporan keuangan."); break;
-    case "analytics": renderPlaceholder(content, "AI Performance & Analytics", "Penilaian kinerja AI, kecepatan, tingkat keberhasilan, dan grafik produktivitas."); break;
-    case "documents": renderPlaceholder(content, "Document Center", "Buat laporan, proposal, surat resmi, dan arsip otomatis per divisi."); break;
-    case "ceo": renderPlaceholder(content, "CEO Control Center", "Kontrol penuh seluruh AI, struktur organisasi, anggaran, dan keputusan strategis."); break;
-    case "settings": renderPlaceholder(content, "Company Settings", "Pengaturan perusahaan, AI Recruitment, Training, Memory, Automation, dan Backup."); break;
-    default: renderDashboard(content);
+function renderMeeting(container) {
+  if (currentMeeting && currentMeeting.status === "running") {
+    renderMeetingRunning(container);
+    return;
   }
-  updateMonitor();
-}
 
-function renderPlaceholder(container, title, desc) {
-  container.innerHTML = `
-    <div class="placeholder">
-      <h2>${title}</h2>
-      <p>${desc}</p>
-      <p style="font-size:13px;margin-top:8px;opacity:0.7">Fitur ini siap dikembangkan sesuai perintahmu berikutnya.</p>
-    </div>
-  `;
-}
-
-// ===== DASHBOARD =====
-function renderDashboard(container) {
-  const working = agents.filter(a => a.status === "working").length;
-  const active = tasks.filter(t => t.status !== "done").length;
-  const completed = tasks.filter(t => t.status === "done").length;
-
+  // Tampilan awal - buat rapat baru
   container.innerHTML = `
     <div class="view-header">
-      <h1>Executive Dashboard</h1>
-      <div class="view-actions">
-        <button class="btn btn-outline" onclick="alert('Report exported (simulasi)')">Export Report</button>
-        <button class="btn btn-primary" onclick="assignRandomTask()">+ Quick Task</button>
-      </div>
+      <h1>AI Meeting Room</h1>
     </div>
 
-    <div class="card-grid">
-      <div class="card">
-        <div class="card-title">Total AI Employees</div>
-        <div class="card-value">${agents.length}</div>
-        <div class="card-sub">${working} sedang bekerja</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Active Tasks</div>
-        <div class="card-value">${active}</div>
-        <div class="card-sub">${completed} selesai</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Productivity</div>
-        <div class="card-value">87%</div>
-        <div class="card-sub">+4% dari kemarin</div>
-      </div>
-      <div class="card">
-        <div class="card-title">Company Credits</div>
-        <div class="card-value">1,240</div>
-        <div class="card-sub">Simulasi</div>
-      </div>
-    </div>
+    <div style="padding: 0 24px 30px; max-width: 700px;">
+      <div class="card" style="margin-bottom: 20px;">
+        <div style="font-weight:600; margin-bottom:12px;">Buat Rapat Baru</div>
+        
+        <label style="font-size:13px; color:var(--text-dim); display:block; margin-bottom:6px;">Topik Rapat</label>
+        <input id="meetingTopic" type="text" placeholder="Contoh: Strategi marketing bulan depan" 
+          style="width:100%; padding:10px 14px; border:1px solid var(--panel-border); border-radius:8px; font-size:14px; margin-bottom:16px; outline:none;">
 
-    <div class="activity-list">
-      <h3 style="margin-bottom:12px;font-size:15px">Aktivitas Terbaru</h3>
-      <div class="activity-item"><div class="activity-time">13:32</div><div><b>Kai</b> menyelesaikan draft konten Instagram</div></div>
-      <div class="activity-item"><div class="activity-time">13:18</div><div><b>Nova</b> push update landing page (80%)</div></div>
-      <div class="activity-item"><div class="activity-time">12:55</div><div><b>Aria</b> membuat laporan harian otomatis</div></div>
-      <div class="activity-item"><div class="activity-time">12:40</div><div><b>Ross</b> sedang istirahat (ON BREAK)</div></div>
-    </div>
-  `;
-}
-
-// ===== OFFICE =====
-function renderOffice(container) {
-  container.innerHTML = `
-    <div class="office-placeholder">
-      <h2>Virtual Office 3D</h2>
-      <p>Kantor virtual DRX.AI</p>
-      <p style="font-size:13px;max-width:360px;text-align:center">
-        Versi 3D penuh sedang disiapkan. Saat ini kamu bisa kelola Agents, Tasks, dan Communication dulu.
-      </p>
-      <button class="btn btn-primary" onclick="document.querySelector('[data-view=dashboard]').click()">Kembali ke Dashboard</button>
-    </div>
-  `;
-}
-
-// ===== EMPLOYEES =====
-function renderEmployees(container) {
-  container.innerHTML = `
-    <div class="view-header">
-      <h1>AI Employee Management</h1>
-      <div class="view-actions">
-        <button class="btn btn-primary" onclick="document.getElementById('btnAddAgent').click()">+ Recruit AI</button>
-      </div>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Role</th>
-            <th>Department</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
+        <label style="font-size:13px; color:var(--text-dim); display:block; margin-bottom:8px;">Undang AI Employees</label>
+        <div id="meetingAgents" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
           ${agents.map(a => `
-            <tr>
-              <td><strong>${a.name}</strong></td>
-              <td>${a.role}</td>
-              <td>${a.dept}</td>
-              <td><span class="agent-status status-${a.status}">${a.status}</span></td>
-              <td>
-                <button class="btn btn-outline" style="padding:4px 10px;font-size:12px" onclick="editAgent(${a.id})">Edit</button>
-              </td>
-            </tr>
+            <label style="display:flex; align-items:center; gap:6px; background:#f8f6f1; padding:6px 12px; border-radius:20px; cursor:pointer; font-size:13px;">
+              <input type="checkbox" value="${a.id}" style="accent-color:var(--accent);">
+              <span style="width:10px;height:10px;border-radius:50%;background:${a.color};display:inline-block;"></span>
+              ${a.name}
+            </label>
           `).join("")}
-        </tbody>
-      </table>
+        </div>
+
+        <button class="btn btn-primary" onclick="startMeeting()">Mulai Rapat</button>
+      </div>
+
+      <div style="font-size:13px; color:var(--text-dim); line-height:1.6;">
+        <b>Cara pakai:</b><br>
+        1. Tulis topik rapat<br>
+        2. Centang AI yang ingin diundang<br>
+        3. Klik <b>Mulai Rapat</b><br>
+        4. AI akan memberikan pendapat sesuai divisi masing-masing<br>
+        5. Sistem otomatis membuat kesimpulan
+      </div>
     </div>
   `;
 }
 
-// ===== TASKS =====
-function renderTasks(container) {
+function startMeeting() {
+  const topicInput = document.getElementById("meetingTopic");
+  const topic = topicInput ? topicInput.value.trim() : "";
+  
+  if (!topic) {
+    alert("Tulis topik rapat terlebih dahulu!");
+    return;
+  }
+
+  const checked = document.querySelectorAll("#meetingAgents input[type=checkbox]:checked");
+  if (checked.length === 0) {
+    alert("Pilih minimal 1 AI untuk diundang!");
+    return;
+  }
+
+  const invited = [];
+  checked.forEach(cb => {
+    const agent = agents.find(a => a.id === Number(cb.value));
+    if (agent) invited.push(agent);
+  });
+
+  currentMeeting = {
+    topic: topic,
+    invited: invited,
+    status: "running",
+    opinions: [],
+    conclusion: null
+  };
+
+  // Ubah status AI jadi meeting
+  invited.forEach(a => a.status = "meeting");
+  renderAgentList();
+
+  // Langsung render tampilan running
+  renderView();
+}
+
+function renderMeetingRunning(container) {
+  const m = currentMeeting;
+
   container.innerHTML = `
     <div class="view-header">
-      <h1>AI Task Manager</h1>
+      <h1>Meeting Room</h1>
       <div class="view-actions">
-        <button class="btn btn-primary" onclick="createTask()">+ New Task</button>
+        <button class="btn btn-outline" onclick="endMeeting()">Akhiri Rapat</button>
       </div>
     </div>
-    <div style="padding:0 24px 24px">
-      ${tasks.length === 0 ? '<p style="color:var(--text-dim)">Belum ada tugas</p>' : 
-        tasks.map(t => `
-          <div class="task-item">
-            <div>
-              <div style="font-weight:600;margin-bottom:4px">${t.title}</div>
-              <div style="font-size:12px;color:var(--text-dim)">
-                Assigned to <b>${t.assignee}</b> · ${t.progress}%
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px">
-              <span class="task-priority priority-${t.priority}">${t.priority}</span>
-              ${t.status !== "done" ? 
-                `<button class="btn btn-outline" style="padding:5px 10px;font-size:12px" onclick="completeTask(${t.id})">Done</button>` : 
-                `<span style="font-size:12px;color:var(--green);font-weight:600">Completed</span>`
-              }
-            </div>
-          </div>
-        `).join("")
-      }
-    </div>
-  `;
-}
 
-// ===== CHAT =====
-function renderChat(container) {
-  const agent = agents.find(a => a.id === selectedAgent) || agents[0];
-  selectedAgent = agent.id;
-
-  container.innerHTML = `
-    <div class="chat-layout">
-      <div class="chat-agents">
-        <div style="padding:14px;font-size:12px;font-weight:700;color:var(--text-dim);border-bottom:1px solid var(--panel-border)">
-          SELECT AGENT
-        </div>
-        ${agents.map(a => `
-          <div class="agent-item ${a.id === selectedAgent ? 'active' : ''}" data-id="${a.id}" style="margin:6px;border-radius:8px">
-            <div class="agent-avatar" style="background:${a.color}">${a.avatar}</div>
-            <div class="agent-info">
-              <div class="agent-name">${a.name}</div>
-              <div class="agent-status status-${a.status}">${a.status}</div>
-            </div>
-          </div>
-        `).join("")}
-      </div>
-      <div class="chat-main">
-        <div style="padding:14px 18px;border-bottom:1px solid var(--panel-border);font-weight:600">
-          Chat with ${agent.name} 
-          <span style="font-weight:400;color:var(--text-dim);font-size:13px">· ${agent.role}</span>
-        </div>
-        <div class="chat-messages" id="chatMessages">
-          <div class="msg ai">Halo! Saya ${agent.name}, ${agent.role} di DRX.AI. Ada yang bisa saya bantu?</div>
-        </div>
-        <div class="chat-input-bar">
-          <input id="chatInput" placeholder="Ketik pesan untuk ${agent.name}..." />
-          <button class="btn btn-primary" onclick="sendChat()">Kirim</button>
+    <div style="padding: 0 24px 30px;">
+      <div class="card" style="margin-bottom: 16px;">
+        <div style="font-size:13px; color:var(--text-dim);">Topik Rapat</div>
+        <div style="font-size:18px; font-weight:700; margin-top:4px;">${m.topic}</div>
+        <div style="margin-top:10px; font-size:13px;">
+          Peserta: ${m.invited.map(a => `<span style="background:#dbeafe; color:#1d4ed8; padding:2px 8px; border-radius:12px; margin-right:6px; font-size:12px;">${a.name}</span>`).join("")}
         </div>
       </div>
+
+      <div id="meetingDiscussion" style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
+        <div style="text-align:center; color:var(--text-dim); padding:20px;">
+          AI sedang berdiskusi...
+        </div>
+      </div>
+
+      <div id="meetingConclusion" style="display:none;"></div>
     </div>
   `;
 
-  container.querySelectorAll(".chat-agents .agent-item").forEach(item => {
-    item.onclick = () => {
-      selectedAgent = Number(item.dataset.id);
-      renderChat(container);
-    };
-  });
-
-  const input = document.getElementById("chatInput");
-  if (input) {
-    input.onkeydown = (e) => { if (e.key === "Enter") sendChat(); };
-  }
+  // Simulasi diskusi AI
+  simulateDiscussion();
 }
 
-// ======================
-// ACTIONS
-// ======================
-function assignRandomTask() {
-  const agent = agents[Math.floor(Math.random() * agents.length)];
-  agent.status = "working";
-  tasks.unshift({
-    id: Date.now(),
-    title: "Tugas baru dari Dashboard",
-    assignee: agent.name,
-    priority: ["high", "medium", "low"][Math.floor(Math.random() * 3)],
-    status: "in-progress",
-    progress: 0
-  });
-  renderAgentList();
-  if (currentView === "dashboard" || currentView === "tasks") renderView();
-  updateMonitor();
-}
+function simulateDiscussion() {
+  const m = currentMeeting;
+  const discussionEl = document.getElementById("meetingDiscussion");
+  if (!discussionEl) return;
 
-function createTask() {
-  const title = prompt("Judul tugas:");
-  if (!title || !title.trim()) return;
-  const assignee = agents[Math.floor(Math.random() * agents.length)].name;
-  tasks.unshift({
-    id: Date.now(),
-    title: title.trim(),
-    assignee,
-    priority: "medium",
-    status: "todo",
-    progress: 0
-  });
-  renderView();
-}
+  discussionEl.innerHTML = "";
+  let delay = 0;
 
-function completeTask(id) {
-  const t = tasks.find(t => t.id === id);
-  if (t) {
-    t.status = "done";
-    t.progress = 100;
-    const agent = agents.find(a => a.name === t.assignee);
-    if (agent) agent.status = "standby";
-    renderAgentList();
-    renderView();
-  }
-}
+  m.invited.forEach((agent, index) => {
+    delay += 900;
 
-function editAgent(id) {
-  const a = agents.find(a => a.id === id);
-  if (!a) return;
-  const newRole = prompt("Role baru:", a.role);
-  if (newRole && newRole.trim()) {
-    a.role = newRole.trim();
-    renderView();
-    renderAgentList();
-  }
-}
+    setTimeout(() => {
+      const opinion = generateOpinion(agent, m.topic);
+      m.opinions.push({ agent: agent.name, text: opinion });
 
-function sendChat() {
-  const input = document.getElementById("chatInput");
-  const messages = document.getElementById("chatMessages");
-  if (!input || !messages || !input.value.trim()) return;
-
-  const text = input.value.trim();
-  messages.innerHTML += `<div class="msg user">${text}</div>`;
-  input.value = "";
-
-  const agent = agents.find(a => a.id === selectedAgent) || agents[0];
-  setTimeout(() => {
-    const replies = [
-      `Baik, saya ${agent.name} akan kerjakan itu sekarang.`,
-      `Siap! Saya catat dan proses sesuai prioritas.`,
-      `Terima kasih. Saya akan laporkan hasilnya nanti.`,
-      `Understood. Sedang saya analisis dulu.`
-    ];
-    messages.innerHTML += `<div class="msg ai">${replies[Math.floor(Math.random() * replies.length)]}</div>`;
-    messages.scrollTop = messages.scrollHeight;
-  }, 500);
-}
-
-// ======================
-// MONITOR
-// ======================
-function updateMonitor() {
-  const body = document.getElementById("monitorBody");
-  if (!body) return;
-
-  const working = agents.filter(a => a.status === "working").length;
-  const activeTasks = tasks.filter(t => t.status !== "done").length;
-
-  let selectedHTML = `<div style="margin-top:10px;color:var(--text-dim);font-size:13px">Pilih agen di kiri</div>`;
-  if (selectedAgent) {
-    const a = agents.find(x => x.id === selectedAgent);
-    if (a) {
-      selectedHTML = `
-        <div style="margin-top:10px;padding:12px;background:#f8f6f1;border-radius:10px">
-          <div style="font-weight:700">${a.name}</div>
-          <div style="font-size:12px;color:var(--text-dim);margin:2px 0 8px">${a.role}</div>
-          <div class="agent-status status-${a.status}">${a.status.toUpperCase()}</div>
+      const div = document.createElement("div");
+      div.className = "card";
+      div.style.padding = "14px";
+      div.innerHTML = `
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+          <div style="width:28px;height:28px;border-radius:6px;background:${agent.color};color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">
+            ${agent.avatar}
+          </div>
+          <strong>${agent.name}</strong>
+          <span style="font-size:12px;color:var(--text-dim);">${agent.role}</span>
         </div>
+        <div style="font-size:14px; line-height:1.5;">${opinion}</div>
       `;
-    }
-  }
+      discussionEl.appendChild(div);
+      discussionEl.scrollTop = discussionEl.scrollHeight;
 
-  body.innerHTML = `
-    <div class="metric"><span class="metric-label">Agents Online</span><span class="metric-value">${agents.length}</span></div>
-    <div class="metric"><span class="metric-label">Working</span><span class="metric-value">${working}</span></div>
-    <div class="metric"><span class="metric-label">Active Tasks</span><span class="metric-value">${activeTasks}</span></div>
-    <div class="metric"><span class="metric-label">Completed</span><span class="metric-value">${tasks.filter(t => t.status === "done").length}</span></div>
-    <div class="metric"><span class="metric-label">Productivity</span><span class="metric-value">87%</span></div>
-    <div style="margin-top:18px;font-size:11px;font-weight:700;color:var(--text-dim);letter-spacing:0.5px">SELECTED AGENT</div>
-    ${selectedHTML}
-  `;
+      // Kalau ini pendapat terakhir → buat kesimpulan
+      if (index === m.invited.length - 1) {
+        setTimeout(() => {
+          generateConclusion();
+        }, 800);
+      }
+    }, delay);
+  });
 }
 
-// ======================
-// INIT
-// ======================
-document.addEventListener("DOMContentLoaded", () => {
-  initNavigation();
+function generateOpinion(agent, topic) {
+  const opinions = {
+    "CEO Office": [
+      `Dari sisi operasional, topik "${topic}" perlu diprioritaskan. Saya usulkan kita buat timeline jelas dan tanggung jawab tiap divisi.`,
+      `Sebagai asisten CEO, saya melihat "${topic}" sangat strategis. Mari kita pastikan semua divisi selaras.`
+    ],
+    "Marketing": [
+      `Untuk "${topic}", saya rekomendasikan pendekatan konten organik + paid ads. Target kita naikkan engagement 30% bulan ini.`,
+      `Dari sisi marketing, "${topic}" bisa kita manfaatkan untuk campaign. Saya sudah punya beberapa ide kreatif.`
+    ],
+    "Finance": [
+      `Dari sisi keuangan, "${topic}" harus kita sesuaikan dengan anggaran. Saya hitung estimasi biayanya dulu.`,
+      `Perlu hati-hati dengan budget untuk "${topic}". Saya usulkan alokasi maksimal 15% dari dana marketing.`
+    ],
+    "Development": [
+      `Secara teknis, "${topic}" feasible. Saya butuh waktu sekitar 1-2 minggu untuk develop fitur pendukungnya.`,
+      `Dari sisi development, kita bisa support "${topic}" dengan tools internal. Saya siap kerjakan.`
+    ],
+    "Content Creation": [
+      `Untuk "${topic}", saya bisa buatkan rangkaian konten (Instagram, TikTok, Blog). Estimasi 8-12 konten.`,
+      `Topik "${topic}" bagus untuk storytelling. Saya siap buatkan script dan visualnya.`
+    ],
+    "Customer Service": [
+      `Dari feedback pelanggan terkait "${topic}", banyak yang meminta kejelasan. Kita perlu komunikasi yang lebih baik.`,
+      `Saya catat keluhan terkait "${topic}". Sebaiknya kita siapkan FAQ dan response template.`
+    ]
+  };
+
+  const list = opinions[agent.dept] || [
+    `Saya setuju dengan pembahasan "${topic}". Mari kita kerjakan bersama secara terstruktur.`
+  ];
+
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function generateConclusion() {
+  const m = currentMeeting;
+  const conclusionEl = document.getElementById("meetingConclusion");
+  if (!conclusionEl) return;
+
+  const summary = `
+    <div class="card" style="border: 2px solid var(--accent);">
+      <div style="font-weight:700; font-size:16px; margin-bottom:10px; color:var(--accent);">
+        Kesimpulan Rapat
+      </div>
+      <div style="font-size:14px; line-height:1.6; margin-bottom:14px;">
+        Rapat dengan topik <b>"${m.topic}"</b> telah selesai dibahas oleh ${m.invited.length} AI.<br><br>
+        <b>Poin utama:</b><br>
+        • Semua peserta memberikan masukan sesuai keahlian divisi masing-masing.<br>
+        • Perlu dibuat action plan dan penanggung jawab.<br>
+        • Disarankan follow-up dalam 3 hari ke depan.
+      </div>
+      <button class="btn btn-primary" onclick="saveMeetingDocument()">Simpan sebagai Dokumen</button>
+      <button class="btn btn-outline" style="margin-left:8px;" onclick="endMeeting()">Selesai</button>
+    </div>
+  `;
+
+  conclusionEl.innerHTML = summary;
+  conclusionEl.style.display = "block";
+  m.conclusion = summary;
+  m.status = "finished";
+}
+
+function saveMeetingDocument() {
+  alert("Dokumen hasil rapat berhasil disimpan ke Document Center! (simulasi)");
+  endMeeting();
+}
+
+function endMeeting() {
+  if (currentMeeting) {
+    currentMeeting.invited.forEach(a => {
+      if (a.status === "meeting") a.status = "standby";
+    });
+  }
+  currentMeeting = null;
   renderAgentList();
   renderView();
-});
+}
